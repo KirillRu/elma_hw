@@ -60,12 +60,15 @@ func SendData(result Response) (CheckResult, error) {
 	return answer, nil
 }
 
-var allResult []CheckResult
+var wg sync.WaitGroup
 
 func GetAll() []CheckResult {
-	var wg sync.WaitGroup
+	allResult := []CheckResult{}
+
 	r := make(chan CheckResult, 1)
-	go saveCheck(r)
+	go func(res *[]CheckResult) {
+		saveCheck(r, res)
+	}(&allResult)
 
 	go func(r chan CheckResult) {
 		wg.Add(1)
@@ -112,9 +115,15 @@ func GetAll() []CheckResult {
 		wg.Done()
 	}(r)
 	wg.Wait()
+	for len(allResult) < 4 {
+		//I give up
+		time.Sleep(time.Second)
+	}
 	return allResult
 }
 
-func saveCheck(r chan CheckResult) {
-	allResult = append(allResult, <-r)
+func saveCheck(r chan CheckResult, res *[]CheckResult) {
+	for {
+		*res = append(*res, <-r)
+	}
 }

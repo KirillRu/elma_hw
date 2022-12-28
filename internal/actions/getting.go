@@ -115,7 +115,9 @@ func GetAll() []CheckResult {
 		wg.Done()
 	}(r)
 	wg.Wait()
-	for len(allResult) < 4 {
+	i := 0
+	for len(allResult) < 4 && i < 50 {
+		i++
 		//I give up
 		time.Sleep(time.Second)
 	}
